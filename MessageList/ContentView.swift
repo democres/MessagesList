@@ -10,32 +10,42 @@ import CoreData
 
 struct ContentView: View {
     @StateObject private var viewModel = ViewModel()
-
+    
     var body: some View {
         NavigationView {
-            List {
-                ForEach(viewModel.posts) { item in
-                    NavigationLink {
-                        PostDetail(post: item)
-                    } label: {
+            VStack {
+                Picker("", selection: $viewModel.favorites) {
+                    Text("All Posts").tag(0)
+                    Text("Favorites").tag(1)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 70)
+                List {
+                    ForEach(viewModel.posts) { item in
                         HStack {
-                            Button(action: { viewModel.addItem() }) {
-                                Label("Add", systemImage: "plus")
+                            NavigationLink {
+                                PostDetail(post: item) { post in
+                                    viewModel.addItem(post: post)
+                                }
+                            } label: {
+                                HStack {
+                                    Text(item.name)
+                                }
                             }
-                            Text(item.name)
                         }
                     }
+                    .onDelete(perform: { offsets in viewModel.deleteItems(offsets: offsets) })
                 }
-                .onDelete(perform: { offsets in viewModel.deleteItems(offsets: offsets) })
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
+                    
                     EditButton()
                 }
-                ToolbarItem {
-                    Button(action: { viewModel.addItem() }) {
-                        Label("Add", systemImage: "plus")
-                    }
+                ToolbarItem(placement: .principal) {
+                    Text("Messages List")
+                        .font(Font.system(size: 25).bold())
+                        .font(.title)
                 }
             }
         }.onAppear {
@@ -47,6 +57,7 @@ struct ContentView: View {
 
 struct PostDetail: View {
     var post: PostModel
+    var addToFavorites: (_ post: PostModel) -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 30) {
@@ -63,6 +74,16 @@ struct PostDetail: View {
             }
             Spacer()
         }.padding(.horizontal, 40)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    EditButton()
+                }
+                ToolbarItem {
+                    Button(action: { addToFavorites(post) }) {
+                        Label("", systemImage: "star")
+                    }
+                }
+            }
     }
 }
 

@@ -11,6 +11,7 @@ import Combine
 
 @MainActor class ViewModel: ObservableObject {
     @Published var posts: [PostModel] = []
+    @Published var favorites = 0
     
     let itemFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -51,7 +52,7 @@ import Combine
         PostStorage.shared.storePosts(posts: posts)
     }
 
-    func addItem() {
+    func addItem(post: PostModel) {
         withAnimation {
             PostStorage.shared.addPost(post: PostCD())
         }
