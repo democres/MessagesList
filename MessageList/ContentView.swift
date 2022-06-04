@@ -20,6 +20,14 @@ struct ContentView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal, 70)
+                
+                Button(action: { viewModel.fetchPosts() }) {
+                    VStack {
+                        Text("Refresh").foregroundColor(.black)
+                        Label("", systemImage: "arrow.clockwise.circle").foregroundColor(.black)
+                    }
+                }
+                
                 List {
                     ForEach(viewModel.posts) { item in
                         HStack {
@@ -39,11 +47,15 @@ struct ContentView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Messages List")
-                        .font(Font.system(size: 25).bold())
-                        .font(.title)
+                    VStack(spacing: 10){
+                        Text("Messages List")
+                            .font(Font.system(size: 25).bold())
+                            .font(.title)
+                    }
                 }
             }
+        }.onAppear {
+            viewModel.fetchPosts()
         }
     }
 
@@ -69,9 +81,6 @@ struct PostDetail: View {
             Spacer()
         }.padding(.horizontal, 40)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
                 ToolbarItem {
                     Button(action: { addToFavorites(post) }) {
                         if post.isFavorite {

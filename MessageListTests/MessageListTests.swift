@@ -7,6 +7,7 @@
 
 import XCTest
 @testable import MessageList
+import Combine
 
 class MessageListTests: XCTestCase {
 
@@ -18,12 +19,56 @@ class MessageListTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
+    @MainActor func testPosts() throws {
+        
+        let expectation = self.expectation(description: "getPosts")
+        let viewModel = ViewModel(postsPublisher: PostStorage.shared.posts.eraseToAnyPublisher())
+        
+        viewModel.fetchPosts { success in
+            XCTAssertTrue(success)
+            expectation.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5)
+
+        XCTAssertGreaterThan(viewModel.posts.count, 50)
+    }
+    
+    @MainActor func testFavorites() throws {
+        //given
+        let expectation = self.expectation(description: "getPosts")
+        let viewModel = ViewModel(postsPublisher: PostStorage.shared.posts.eraseToAnyPublisher())
+        
+        //when
+        viewModel.fetchPosts { success in
+            XCTAssertTrue(success)
+            expectation.fulfill()
+        }
+        
+        //then
+        if let firstItem = viewModel.posts.first {
+            viewModel.setAsFavorite(post: firstItem)
+            XCTAssertTrue(firstItem.isFavorite)
+        }
+        
+        waitForExpectations(timeout: 5)
+    }
+    
+    @MainActor func testDeleteAll() throws {
+        //given
+        let expectation = self.expectation(description: "getPosts")
+        let viewModel = ViewModel(postsPublisher: PostStorage.shared.posts.eraseToAnyPublisher())
+        
+        //when
+        viewModel.fetchPosts { success in
+            XCTAssertTrue(success)
+            expectation.fulfill()
+        }
+        waitForExpectations(timeout: 5)
+        
+        //then
+        PostStorage.shared.deleteAll()
+        XCTAssertEqual(viewModel.posts.count, 0)
     }
 
     func testPerformanceExample() throws {
