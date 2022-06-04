@@ -32,6 +32,8 @@ import Combine
                 break
             }
         }.store(in: &cancellable)
+        
+        fetchPosts()
     }
     
     func fetchPosts() {
@@ -40,6 +42,7 @@ import Combine
         apiClient.sendRequest(model: [PostModel].self, request: request) { [weak self] resultResponse in
             switch resultResponse {
             case .success(let data):
+
                 self?.storePosts(posts: data)
             case .failure(let error):
                 print("Handle Error: " + error.localizedDescription)
@@ -49,18 +52,16 @@ import Combine
     }
     
     func storePosts(posts: [PostModel]) {
-        PostStorage.shared.storePosts(posts: posts)
+        PostStorage.shared.batchInsertPosts(posts)
     }
 
-    func addItem(post: PostCD) {
-        withAnimation {
-            PostStorage.shared.setAsFavorite(post: post)
-        }
+    func setAsFavorite(post: PostCD) {
+        PostStorage.shared.setAsFavorite(post: post)
     }
     
     func deleteItems(offsets: IndexSet) {
         withAnimation {
             PostStorage.shared.deletePosts(offsets: offsets)
         }
-    }   
+    }
 }

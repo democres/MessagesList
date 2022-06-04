@@ -25,7 +25,7 @@ struct ContentView: View {
                         HStack {
                             NavigationLink {
                                 PostDetail(post: item) { post in
-                                    viewModel.addItem(post: post)
+                                    viewModel.setAsFavorite(post: post)
                                 }
                             } label: {
                                 HStack {
@@ -38,19 +38,12 @@ struct ContentView: View {
                 }
             }
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    
-                    EditButton()
-                }
                 ToolbarItem(placement: .principal) {
                     Text("Messages List")
                         .font(Font.system(size: 25).bold())
                         .font(.title)
                 }
             }
-        }.onAppear {
-//            PostStorage.shared.deleteAll()
-            viewModel.fetchPosts()
         }
     }
 

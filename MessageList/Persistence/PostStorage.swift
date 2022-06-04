@@ -44,31 +44,11 @@ class PostStorage: NSObject, ObservableObject {
         }
         return []
     }
-    
-    func storePosts(posts: [PostModel]) {
-        for post in posts {
-            let newPost = PostCD(context: viewContext)
-            newPost.timestamp = Date()
-            newPost.postId = Int16(post.postId)
-            newPost.id = Int16(post.id)
-            newPost.name = post.name
-            newPost.email = post.email
-            newPost.body = post.body
-        }
-        
-        do {
-            try viewContext.save()
-        } catch {
-            
-            let nsError = error as NSError
-            print("Unresolved error \(nsError), \(nsError.userInfo)")
-        }
-    }
-    
+
     func setAsFavorite(post: PostCD) {
         post.isFavorite.toggle()
         do {
-            try viewContext.save()
+            try self.viewContext.save()
         } catch {
             let nsError = error as NSError
             print("Unresolved error \(nsError), \(nsError.userInfo)")
@@ -94,6 +74,45 @@ class PostStorage: NSObject, ObservableObject {
             viewContext.delete(object)
         }
         try? viewContext.save()
+    }
+    
+    func batchInsertPosts(_ posts: [PostModel]) {
+        guard !posts.isEmpty else { return }
+        
+        PersistenceController.shared.container.performBackgroundTask { context in
+            context.transactionAuthor = "Posts Storage"
+            let batchInsert = self.storePosts(posts: posts)
+            do {
+                try context.execute(batchInsert)
+                print("Finished batch inserting \(posts.count) posts")
+            } catch {
+                let nsError = error as NSError
+                print("Error batch inserting posts %@", nsError.userInfo)
+            }
+        }
+    }
+
+    func storePosts(posts: [PostModel]) -> NSBatchInsertRequest {
+        var index = 0
+        let total = posts.count
+        
+        let batchInsert = NSBatchInsertRequest(entity: PostCD.entity()) { (managedObject: NSManagedObject) -> Bool in
+            
+            guard index < total else { return true }
+            
+            if let post = managedObject as? PostCD {
+                let data = posts[index]
+                post.timestamp = Date()
+                post.postId = Int16(data.postId)
+                post.id = Int16(data.id)
+                post.name = data.name
+                post.email = data.email
+                post.body = data.body
+            }
+            index += 1
+            return false
+        }
+        return batchInsert
     }
 }
 
