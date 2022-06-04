@@ -10,15 +10,8 @@ import CoreData
 import Combine
 
 @MainActor class ViewModel: ObservableObject {
-    @Published var posts: [PostModel] = []
+    @Published var posts: [PostCD] = []
     @Published var favorites = 0
-    
-    let itemFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .medium
-        return formatter
-    }()
     
     private var cancellable = Set<AnyCancellable>()
     private let apiClient = APIClient()
@@ -26,11 +19,18 @@ import Combine
     init(coursePublisher: AnyPublisher<[PostCD],Never> = PostStorage.shared.posts.eraseToAnyPublisher()) {
         
         coursePublisher.sink { [weak self] posts in
-            self?.posts = posts.map({ PostModel(postId: Int($0.postId),
-                                                id: Int($0.id),
-                                                name: $0.name ?? "",
-                                                email: $0.email ?? "",
-                                                body: $0.body ?? "") })
+            self?.posts = posts
+        }.store(in: &cancellable)
+        
+        $favorites.sink { [weak self] flag in
+            switch flag {
+            case 0:
+                self?.posts = PostStorage.shared.getAllPosts()
+            case 1:
+                self?.posts = PostStorage.shared.getAllPosts().filter({ $0.isFavorite })
+            default:
+                break
+            }
         }.store(in: &cancellable)
     }
     
@@ -52,9 +52,9 @@ import Combine
         PostStorage.shared.storePosts(posts: posts)
     }
 
-    func addItem(post: PostModel) {
+    func addItem(post: PostCD) {
         withAnimation {
-            PostStorage.shared.addPost(post: PostCD())
+            PostStorage.shared.setAsFavorite(post: post)
         }
     }
     
@@ -62,5 +62,5 @@ import Combine
         withAnimation {
             PostStorage.shared.deletePosts(offsets: offsets)
         }
-    }
+    }   
 }

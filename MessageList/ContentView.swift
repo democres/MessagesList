@@ -29,7 +29,7 @@ struct ContentView: View {
                                 }
                             } label: {
                                 HStack {
-                                    Text(item.name)
+                                    Text(item.name ?? "")
                                 }
                             }
                         }
@@ -49,6 +49,7 @@ struct ContentView: View {
                 }
             }
         }.onAppear {
+//            PostStorage.shared.deleteAll()
             viewModel.fetchPosts()
         }
     }
@@ -56,18 +57,18 @@ struct ContentView: View {
 }
 
 struct PostDetail: View {
-    var post: PostModel
-    var addToFavorites: (_ post: PostModel) -> Void
+    var post: PostCD
+    var addToFavorites: (_ post: PostCD) -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 30) {
-            Text(post.name)
+            Text(post.name ?? "")
                 .font(.title)
                 .foregroundColor(.primary)
-            Text(post.body)
+            Text(post.body ?? "")
                 .foregroundColor(.secondary)
             VStack(alignment: .leading) {
-                Text("Email: \(post.email)")
+                Text("email: \(post.email ?? "")")
                     .foregroundColor(.accentColor)
                 Text("ID: \(post.postId)")
                     .foregroundColor(.primary)
@@ -80,7 +81,11 @@ struct PostDetail: View {
                 }
                 ToolbarItem {
                     Button(action: { addToFavorites(post) }) {
-                        Label("", systemImage: "star")
+                        if post.isFavorite {
+                            Label("", systemImage: "star.fill")
+                        } else {
+                            Label("", systemImage: "star")
+                        }
                     }
                 }
             }

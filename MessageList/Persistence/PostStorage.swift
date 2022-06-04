@@ -18,7 +18,8 @@ class PostStorage: NSObject, ObservableObject {
     
     private override init() {
         let fetchRequest = PostCD.fetchRequest()
-        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \PostCD.timestamp, ascending: true)]
+        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \PostCD.timestamp,
+                                                         ascending: true)]
         messagesFetchController = NSFetchedResultsController(
             fetchRequest: fetchRequest,
             managedObjectContext: PersistenceController.shared.container.viewContext,
@@ -34,6 +35,14 @@ class PostStorage: NSObject, ObservableObject {
         } catch {
             NSLog("Error: could not fetch objects")
         }
+    }
+    
+    func getAllPosts() -> [PostCD] {
+        let fetchRequest = PostCD.fetchRequest()
+        if let objects = try? viewContext.fetch(fetchRequest) {
+            return objects
+        }
+        return []
     }
     
     func storePosts(posts: [PostModel]) {
@@ -56,16 +65,13 @@ class PostStorage: NSObject, ObservableObject {
         }
     }
     
-    func addPost(post: PostCD) {
-        let newPost = PostCD(context: viewContext)
-        newPost.timestamp = Date()
-        
+    func setAsFavorite(post: PostCD) {
+        post.isFavorite.toggle()
         do {
             try viewContext.save()
         } catch {
-            
             let nsError = error as NSError
-            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            print("Unresolved error \(nsError), \(nsError.userInfo)")
         }
     }
     
@@ -79,6 +85,15 @@ class PostStorage: NSObject, ObservableObject {
             let nsError = error as NSError
             fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
         }
+    }
+    
+    func deleteAll() {
+        let objects = getAllPosts()
+        
+        for object in objects {
+            viewContext.delete(object)
+        }
+        try? viewContext.save()
     }
 }
 

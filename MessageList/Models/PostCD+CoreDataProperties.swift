@@ -22,9 +22,16 @@ extension PostCD {
     @NSManaged public var name: String?
     @NSManaged public var email: String?
     @NSManaged public var body: String?
+    @NSManaged public var isFavorite: Bool
 
 }
 
 extension PostCD : Identifiable {
-
+    func asPostModel() -> PostModel {
+        PostModel(postId: Int(self.postId),
+                  id: Int(self.id),
+                  name: self.name ?? "",
+                  email: self.email ?? "",
+                  body: self.body ?? "")
+    }
 }
