@@ -79,15 +79,18 @@ class PostStorage: NSObject, ObservableObject {
     func batchInsertPosts(_ posts: [PostModel]) {
         guard !posts.isEmpty else { return }
         
-        PersistenceController.shared.container.performBackgroundTask { context in
+        PersistenceController.shared.container.performBackgroundTask { [weak self] context in
             context.transactionAuthor = "Posts Storage"
-            let batchInsert = self.storePosts(posts: posts)
-            do {
-                try context.execute(batchInsert)
-                print("Finished batch inserting \(posts.count) posts")
-            } catch {
-                let nsError = error as NSError
-                print("Error batch inserting posts %@", nsError.userInfo)
+            if let batchInsert = self?.storePosts(posts: posts) {
+                do {
+                    try context.execute(batchInsert)
+                    print("Finished batch inserting \(posts.count) posts")
+                } catch {
+                    let nsError = error as NSError
+                    print("Error batch inserting posts %@", nsError.userInfo)
+                }
+                try? self?.messagesFetchController.performFetch()
+                self?.posts.value = self?.messagesFetchController.fetchedObjects ?? []
             }
         }
     }

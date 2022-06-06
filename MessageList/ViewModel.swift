@@ -22,7 +22,7 @@ import Combine
     
     init(postsPublisher: AnyPublisher<[PostCD],Never> = PostStorage.shared.posts.eraseToAnyPublisher()) {
         
-        postsPublisher.sink { [weak self] posts in
+        postsPublisher.receive(on: DispatchQueue.main).sink { [weak self] posts in
             self?.posts = posts
         }.store(in: &cancellable)
     }
