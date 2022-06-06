@@ -34,6 +34,8 @@ struct ContentView: View {
                             NavigationLink {
                                 PostDetail(post: item) { post in
                                     viewModel.setAsFavorite(post: post)
+                                }.onDisappear {
+                                    viewModel.showPosts()
                                 }
                             } label: {
                                 HStack {
